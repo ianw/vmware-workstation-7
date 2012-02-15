@@ -47,6 +47,19 @@
 #   define net_device device
 #endif
 
+/* it looks like these have been removed from the kernel 3.1
+ * probably because the "transition" is considered complete.
+ * so to keep this source compatible we just redefine them like they were
+ * previously
+ */
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 41, 0) && LINUX_VERSION_CODE < KERNEL_VERSION(3, 0, 0)) || LINUX_VERSION_CODE >= KERNEL_VERSION(3, 1, 0)
+#define HAVE_ALLOC_NETDEV		/* feature macro: alloc_xxxdev
+					   functions are available. */
+#define HAVE_FREE_NETDEV		/* free_netdev() */
+#define HAVE_NETDEV_PRIV		/* netdev_priv() */
+#define HAVE_NETIF_QUEUE
+#define HAVE_NET_DEVICE_OPS
+#endif
 
 /*
  * SET_MODULE_OWNER appeared sometime during 2.3.x. It was setting

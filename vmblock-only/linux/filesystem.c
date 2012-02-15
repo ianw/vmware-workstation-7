@@ -44,8 +44,13 @@ static struct inode *GetInode(struct super_block *sb, ino_t ino);
 /* File system operations */
 
 #if defined(VMW_GETSB_2618)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 39)
 static int FsOpGetSb(struct file_system_type *fsType, int flags,
                      const char *devName, void *rawData, struct vfsmount *mnt);
+#else
+static struct dentry *FsOpMount(struct file_system_type *fsType, int flags,
+                     const char *devName, void *rawData);
+#endif
 #else
 static struct super_block *FsOpGetSb(struct file_system_type *fsType, int flags,
                                      const char *devName, void *rawData);
@@ -66,7 +71,11 @@ static size_t fsRootLen;
 static struct file_system_type fsType = {
    .owner = THIS_MODULE,
    .name = VMBLOCK_FS_NAME,
+   #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 39)
    .get_sb = FsOpGetSb,
+   #else
+   .mount = FsOpMount,
+   #endif
    .kill_sb = kill_anon_super,
 };
 
@@ -336,7 +345,11 @@ Iget(struct super_block *sb,    // IN: file system superblock object
       goto error_inode;
    }
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 39)
    if (compat_path_lookup(iinfo->name, 0, &actualNd)) {
+#else
+   if (kern_path(iinfo->name, 0, &(actualNd.path))) {
+#endif
       /*
        * This file does not exist, so we create an inode that doesn't know
        * about its underlying file.  Operations that create files and
@@ -533,18 +546,17 @@ FsOpReadSuper(struct super_block *sb, // OUT: Superblock object
    return 0;
 }
 
-
 #if defined(VMW_GETSB_2618)
 /*
  *-----------------------------------------------------------------------------
  *
- * FsOpGetSb --
+ * FsOpGetSb/FsOpMount --
  *
  *    Invokes generic kernel code to prepare superblock for
  *    deviceless filesystem.
  *
  * Results:
- *    0 on success
+ *    0/dentry on success
  *    negative error code on failure
  *
  * Side effects:
@@ -552,7 +564,7 @@ FsOpReadSuper(struct super_block *sb, // OUT: Superblock object
  *
  *-----------------------------------------------------------------------------
  */
-
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 39)
 static int
 FsOpGetSb(struct file_system_type *fs_type, // IN: file system type of mount
           int flags,                        // IN: mount flags
@@ -562,6 +574,16 @@ FsOpGetSb(struct file_system_type *fs_type, // IN: file system type of mount
 {
    return get_sb_nodev(fs_type, flags, rawData, FsOpReadSuper, mnt);
 }
+#else
+struct dentry *
+FsOpMount(struct file_system_type *fs_type, // IN: file system type of mount
+          int flags,                        // IN: mount flags
+          const char *dev_name,             // IN: device mounting on
+          void *rawData)                    // IN: mount arguments
+{
+   return mount_nodev(fs_type, flags, rawData, FsOpReadSuper);
+}
+#endif
 #else
 /*
  *-----------------------------------------------------------------------------

@@ -104,7 +104,11 @@ DentryOpRevalidate(struct dentry *dentry,  // IN: dentry revalidating
       return actualDentry->d_op->d_revalidate(actualDentry, nd);
    }
 
-   if (path_lookup(iinfo->name, 0, &actualNd)) {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 39)
+   if (compat_path_lookup(iinfo->name, 0, &actualNd)) {
+#else
+   if (kern_path(iinfo->name, 0, &(actualNd.path))) {
+#endif
       LOG(4, "DentryOpRevalidate: [%s] no longer exists\n", iinfo->name);
       return 0;
    }
