@@ -1,0 +1,4 @@
+Run "create-tars.sh" and then copy the tar files to
+/usr/lib/vmware/modules/souce.  
+
+Then run "vmware-modconfig --console --install-all"
