@@ -27,6 +27,7 @@
 #include "compat_mutex.h"
 #include "compat_semaphore.h"
 #include <linux/netdevice.h>
+#include <linux/module.h>
 /*
  * All this makes sense only if NETFILTER support is configured in our kernel.
  */

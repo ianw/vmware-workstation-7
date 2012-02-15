@@ -131,7 +131,7 @@ VNetNetIfSetup(struct net_device *dev)  // IN:
       .ndo_stop = VNetNetifClose,
       .ndo_get_stats = VNetNetifGetStats,
       .ndo_set_mac_address = VNetNetifSetMAC,
-      .ndo_set_multicast_list = VNetNetifSetMulticast,
+      .ndo_set_rx_mode = VNetNetifSetMulticast,
       /*
        * We cannot stuck... If someone will report problems under
        * low memory conditions or some such, we should enable it.
